@@ -1,6 +1,6 @@
 let mysql = require("mysql");
 let inquirer = require("inquirer");
-let consoleTable = require("console.table");
+let cTable = require("console.table");
 
 // Define connection to local database
 let connection = mysql.createConnection({
@@ -26,7 +26,7 @@ connection.connect(function(err) {
 });
 
 
-// Search functions
+// Main function
 function mainSearch() {
     inquirer
         .prompt({
@@ -56,6 +56,7 @@ function mainSearch() {
         });
 }
 
+// Department functions
 function deptSearch() {
     inquirer
         .prompt({
@@ -83,4 +84,110 @@ function deptSearch() {
                 break;
             }            
         });
+}
+
+function listDept() {
+    let queryString = "SELECT name FROM department";
+
+    return new Promise((resolve, reject) => {
+
+        connection.query(queryString, function(err, res) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(res);
+            }
+        });
+
+    })
+    .then(val => {
+        return val;
+    });
+    
+}
+
+function viewDept() {
+    
+    let queryString = "SELECT name FROM department";
+
+    connection.query(queryString, function (err, res) {
+
+        if (err) throw err;
+        
+        console.clear();
+        console.table(res);
+
+        mainSearch();
+    });
+}
+
+function addDept() {
+
+    inquirer
+        .prompt({
+
+            name: "addDept",
+            type: "input",
+            message: "What is the name of the department you'd like to add?",
+            validate: (value) => {
+                if (value === "" || value === null) {
+                    return "You must enter a value!";
+                } else if (isNaN(value)) {
+                    return true;
+                } else {
+                    return "Department name can't be a number.";
+                }
+            }
+        })
+        .then(function(answer) {
+            let queryString = "INSERT INTO department (name) VALUES (?)";
+
+            connection.query(queryString, answer.addDept, function(err, res) {
+                if (err) throw err;
+                
+                console.clear();
+                console.log("Successfully added department named " + answer.addDept);
+
+                mainSearch();
+            });
+        });
+}
+
+function delDept () {
+
+    let deptList = listDept();
+
+    console.log(deptList);
+
+    // inquirer
+    //     .prompt({
+    //         name: "delDept",
+    //         type: "input",
+    //         message: "What is the name of the department you'd like to delete?",
+    //         validate: (value) => {
+    //             if (value === "" || value === null) {
+    //                 return "You must enter a value!";
+    //             } else if (isNaN(value)) {
+    //                 return true;
+    //             } else {
+    //                 return "Department name can't be a number.";
+    //             }
+    //         }
+    //     })
+    //     .then(function(answer) {
+    //         let queryString = "DELETE FROM department WHERE name=?";
+
+    //         connection.query(queryString, answer.delDept, function(err, res) {
+    //             if (err) throw err;
+
+    //             if (res.rowsAffected === 0) {
+    //                 console.clear();
+    //                 console.log("No department found named " + answer.delDept);
+    //             } else {
+    //                 console.clear();
+    //                 console.log("Successfully deleted department named " + answer.delDept);
+    //             }
+    //         })
+    //     })
+
 }

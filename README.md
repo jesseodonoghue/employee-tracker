@@ -15,7 +15,7 @@ Once each task has been fulfilled successfully, the user is presented with a suc
 ![app-screen-3](https://user-images.githubusercontent.com/66024509/93719556-4e221280-fb51-11ea-8f70-29b22a38de26.png)
 
 ## Live Link
-This program is command line only and is not deployed. A video showing the functionality in action can be seen here: [App Video Link](https://drive.google.com/file/d/1DEpmOyexbltodOG67OVw0CjILFXwdotR/view)
+This program is command line only and is not deployed. A video showing the functionality in action can be seen here: [App Video Link](https://drive.google.com/file/d/1DEpmOyexbltodOG67OVw0CjILFXwdotR/view?usp=sharing)
 
 ## License Info
 Copyright 2020, Jesse O'Donoghue

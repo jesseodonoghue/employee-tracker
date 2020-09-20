@@ -151,7 +151,7 @@ function addDept() {
                 
                 console.clear();
                 console.log(`
-                Successfully added ${answer.addDept} department.
+                *** Successfully added ${answer.addDept} department. ***
 
                 `);
 
@@ -190,7 +190,7 @@ function delDept () {
     
                     console.clear();
                     console.log(`
-                    Successfully deleted ${answer.delDept} department.
+                    *** Successfully deleted ${answer.delDept} department. ***
                     
                     `);                
 
@@ -198,10 +198,6 @@ function delDept () {
                 });
             });
     });
-}
-
-function deptBudget () {
-
 }
 
 
@@ -335,7 +331,7 @@ function addRole() {
                     
                     console.clear();
                     console.log(`                    
-                    Successfully added ${answer.title} role.
+                    *** Successfully added ${answer.title} role. ***
     
                     `);
     
@@ -375,7 +371,7 @@ function delRole () {
     
                     console.clear();
                     console.log(`
-                    Successfully deleted ${answer.delRole} department.
+                    *** Successfully deleted ${answer.delRole} department. ***
 
                     `);          
                     
@@ -396,7 +392,9 @@ function empSearch() {
             choices: [
                 "View all employees",
                 "Add an employee",
-                "Delete an employee"
+                "Delete an employee",
+                "Update an employee's role",
+                "Update an employee's manager"
             ]
         })
         .then(function(answer) {
@@ -411,6 +409,14 @@ function empSearch() {
 
             case "Delete an employee":
                 delEmp();
+                break;
+
+            case "Update an employee's role":
+                upEmpRole();
+                break;
+
+            case "Update an employee's manager":
+                upEmpMan();
                 break;
             }            
         });
@@ -547,59 +553,70 @@ function addEmp() {
                     roleId = getRoleId();
                     manId = getManId();
 
-                    console.log(`
-                    Role ID equals ${roleId}
-                    
-                    Manager ID equals ${manId}`);
     
-                    // let queryString = "INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)";
+                    let queryString = "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)";
         
-                    // connection.query(queryString, [answer.title, answer.salary, roleId], function(err, res) {
-                    //     if (err) throw err;
+                    connection.query(queryString, [answer.fname, answer.lname, roleId, manId], function(err, res) {
+                        if (err) throw err;
                         
-                    //     console.clear();
-                    //     console.log(`                    
-                    //     Successfully added ${answer.title} role.
+                        console.clear();
+                        console.log(`                    
+                        *** Successfully added ${answer.fname} ${answer.lname} as a new employee. ***
         
-                    //     `);
+                        `);
         
-                    //     mainSearch();
-                    // });
+                        mainSearch();
+                    });
                 });   
         });
     });
 }
 
-function delRole () {
+function delEmp () {
 
-    listRole().then(res => {
+    listEmp().then(emp => {
+
+        choicesEmpList = [];
         
-        let choicesList = [];
-        for (let i = 0; i < res.length; i++) {
+        for (let i = 0; i < emp.length; i++) {
             let obj = {};
-            obj["id"] = res[i].id;
-            obj["title"] = res[i].title;
+            obj["id"] = emp[i].id;
+            obj["first_name"] = emp[i].first_name;
+            obj["last_name"] = emp[i].last_name;
+            obj["role_id"] = emp[i].role_id;
+            obj["manager_id"] = emp[i].manager_id;
 
-            roleList.push(obj);
-            choicesList.push(obj.title);
+            empList.push(obj);
+            choicesEmpList.push(obj.first_name + " " + obj.last_name);
         }
         
         inquirer
             .prompt({
-                name: "delRole",
+                name: "delEmp",
                 type: "list",
-                message: "Which role would you like to delete?",
-                choices: choicesList
+                message: "Which employee would you like to delete?",
+                choices: choicesEmpList
             })
             .then(function(answer) {
-                let queryString = "DELETE FROM role WHERE title=?";
+
+                let chosenEmployeeId;                
+                const chosenEmployee = answer.delEmp.split(" ");
+
+                for (let i = 0; i < empList.length; i++) {
+                    
+                    if (empList[i].first_name === chosenEmployee[0] && empList[i].last_name === chosenEmployee[1]) {
+                        chosenEmployeeId = empList[i].id;
+                    }
+                }
+
+                let queryString = "DELETE FROM employee WHERE id=?";
     
-                connection.query(queryString, answer.delRole, function(err, res) {
+                connection.query(queryString, chosenEmployeeId, function(err, res) {
                     if (err) throw err;
     
                     console.clear();
                     console.log(`
-                    Successfully deleted ${answer.delRole} department.
+                    *** Successfully deleted the employee named ${answer.delEmp}. ***
 
                     `);          
                     
@@ -607,4 +624,179 @@ function delRole () {
                 });
             });
     });
+}
+
+function upEmpRole() {
+
+    listRole().then(roles => {
+
+        choicesRoleList = [];
+
+        for (let i = 0; i < roles.length; i++) {
+            let obj = {};
+            obj["id"] = roles[i].id;
+            obj["title"] = roles[i].title;
+            obj["salary"] = roles[i].salary;
+            obj["department_id"] = roles[i].department_id;
+
+            roleList.push(obj);
+            choicesRoleList.push(obj.title);
+        }
+        
+        listEmp().then(emps => {
+
+            choicesEmpList = [];
+
+            for (let i = 0; i < emps.length; i++) {
+                let obj = {};
+                obj["id"] = emps[i].id;
+                obj["first_name"] = emps[i].first_name;
+                obj["last_name"] = emps[i].last_name;
+                obj["role_id"] = emps[i].role_id;
+                obj["manager_id"] = emps[i].manager_id;
+    
+                empList.push(obj);
+                choicesEmpList.push(obj.first_name + " " + obj.last_name);
+            }
+
+
+            inquirer
+                .prompt([
+                {
+                    name: "employee",
+                    type: "list",
+                    message: "Which employee's role would you like to change?",
+                    choices: choicesEmpList
+                },
+                {
+                    name: "newRole",
+                    type: "list",
+                    message: "What is the new role?",
+                    choices: choicesRoleList
+                }
+            ])
+                .then(function(answer) {
+                    let roleId;
+                    let empId;
+
+                    function getEmpId () {
+                        for (let i = 0; i < empList.length; i++) {
+                            const chosenEmployee = answer.employee.split(" ");
+
+                            if (empList[i].first_name === chosenEmployee[0] && empList[i].last_name === chosenEmployee[1]) {
+                                return empList[i].id;                            
+                            }
+                        }
+                    };
+    
+                    function getRoleId () {
+                        for (let i = 0; i < roleList.length; i++) {
+                            if (roleList[i].title === answer.newRole) {
+                                return roleList[i].id;                            
+                            }
+                        }
+                    };
+
+
+    
+                    empId = getEmpId();
+                    roleId = getRoleId();
+
+    
+                    let queryString = "UPDATE employee SET role_id = ? WHERE id = ?";
+        
+                    connection.query(queryString, [roleId, empId], function(err, res) {
+                        if (err) throw err;
+                        
+                        console.clear();
+                        console.log(`                    
+                        *** Successfully changed ${answer.employee}'s role to ${answer.newRole}. ***
+        
+                        `);
+        
+                        mainSearch();
+                    });
+                });   
+        });
+    });
+}
+
+function upEmpMan() {
+            
+    listEmp().then(emps => {
+
+        choicesEmpList = [];
+
+        for (let i = 0; i < emps.length; i++) {
+            let obj = {};
+            obj["id"] = emps[i].id;
+            obj["first_name"] = emps[i].first_name;
+            obj["last_name"] = emps[i].last_name;
+            obj["role_id"] = emps[i].role_id;
+            obj["manager_id"] = emps[i].manager_id;
+
+            empList.push(obj);
+            choicesEmpList.push(obj.first_name + " " + obj.last_name);
+        }
+
+
+        inquirer
+            .prompt([
+            {
+                name: "employee",
+                type: "list",
+                message: "Which employee's manager would you like to change?",
+                choices: choicesEmpList
+            },
+            {
+                name: "newMan",
+                type: "list",
+                message: "Who is the new manager?",
+                choices: choicesEmpList
+            }
+        ])
+            .then(function(answer) {
+                let empId;
+                let manId;
+                
+                function getEmpId () {
+                    for (let i = 0; i < empList.length; i++) {
+                        const chosenEmployee = answer.employee.split(" ");
+
+                        if (empList[i].first_name === chosenEmployee[0] && empList[i].last_name === chosenEmployee[1]) {
+                            return empList[i].id;                            
+                        }
+                    }
+                };
+
+                function getManId () {
+                    for (let i = 0; i < empList.length; i++) {
+                        const chosenManager = answer.newMan.split(" ");
+
+                        if (empList[i].first_name === chosenManager[0] && empList[i].last_name === chosenManager[1]) {
+                            return empList[i].id;                            
+                        }
+                    }
+                };
+
+                empId = getEmpId();
+                manId = getManId();
+
+
+                let queryString = "UPDATE employee SET manager_id = ? WHERE id = ?";
+    
+                connection.query(queryString, [manId, empId], function(err, res) {
+                    if (err) throw err;
+                    
+                    console.clear();
+                    console.log(`                    
+                    *** Successfully changed ${answer.employee}'s manager to ${answer.newMan}. ***
+    
+                    `);
+    
+                    mainSearch();
+                });
+            });   
+    });
+    
 }
